@@ -35,7 +35,17 @@ export COMMON_SRCS	 = bl.c cdcacm.c  usart.c
 #
 # Bootloaders to build
 #
-TARGETS			 = px4fmu_bl px4fmuv2_bl px4fmuv4_bl mindpxv2_bl px4flow_bl px4discovery_bl px4aerocore_bl px4io_bl px4mavstation_bl tapv1_bl
+TARGETS			 = px4fmu_bl   \
+				   px4fmuv2_bl \
+				   px4fmuv4_bl \
+				   px4fmuv4pro_bl \
+				   mindpxv2_bl \
+				   px4flow_bl  \
+				   px4discovery_bl \
+				   px4aerocore_bl \
+				   px4io_bl \
+				   px4mavstation_bl \
+				   tapv1_bl
 
 # px4io_bl px4flow_bl
 
@@ -43,6 +53,7 @@ all:	$(TARGETS)
 
 
 clean:
+	cd libopencm3 && make --no-print-directory clean & cd ..
 	rm -f *.elf *.bin
 
 #
@@ -57,6 +68,9 @@ px4fmuv2_bl: $(MAKEFILE_LIST) $(LIBOPENCM3)
 
 px4fmuv4_bl: $(MAKEFILE_LIST) $(LIBOPENCM3)
 	make -f Makefile.f4 TARGET_HW=PX4_FMU_V4  LINKER_FILE=stm32f4.ld TARGET_FILE_NAME=$@
+
+px4fmuv4pro_bl:$(MAKEFILE_LIST) $(LIBOPENCM3)
+	make -f Makefile.f4 TARGET_HW=PX4_FMU_V4_PRO LINKER_FILE=stm32f4.ld TARGET_FILE_NAME=$@ EXTRAFLAGS=-DSTM32F469
 
 mindpxv2_bl: $(MAKEFILE_LIST) $(LIBOPENCM3)
 	make -f Makefile.f4 TARGET_HW=MINDPX_V2 LINKER_FILE=stm32f4.ld TARGET_FILE_NAME=$@
