@@ -44,6 +44,7 @@ TARGETS			 = px4fmu_bl   \
 				   px4discovery_bl \
 				   px4aerocore_bl \
 				   px4io_bl \
+				   px4iov3_bl \
 				   px4mavstation_bl \
 				   tapv1_bl
 
@@ -90,6 +91,9 @@ px4aerocore_bl: $(MAKEFILE_LIST) $(LIBOPENCM3)
 #
 px4io_bl: $(MAKEFILE_LIST) $(LIBOPENCM3)
 	make -f Makefile.f1 TARGET_HW=PX4_PIO_V1 LINKER_FILE=stm32f1.ld TARGET_FILE_NAME=$@
+
+px4iov3_bl: $(MAKEFILE_LIST) $(LIBOPENCM3)
+	make -f Makefile.f3 TARGET_HW=PX4_PIO_V3 LINKER_FILE=stm32f3.ld TARGET_FILE_NAME=$@
 
 px4mavstation_bl: $(MAKEFILE_LIST) $(LIBOPENCM3)
 	make -f Makefile.f1 TARGET_HW=PX4_MAVSTATION_V1 LINKER_FILE=12K-stm32f1.ld TARGET_FILE_NAME=$@
