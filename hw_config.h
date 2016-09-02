@@ -11,44 +11,7 @@
 /****************************************************************************
  * TARGET_HW_PX4_FMU_V1
  ****************************************************************************/
-/*
- * Define usage to configure a bootloader
- *
- * Constant                example          Usage
- * APP_LOAD_ADDRESS     0x08004000            - The address in Linker Script, where the app fw is org-ed
- * BOOTLOADER_DELAY     5000                  - Ms to wait while under USB pwr or bootloader request
- * BOARD_FMUV2
- * INTERFACE_USB        1                     - (Optional) Scan and use the USB interface for bootloading
- * INTERFACE_USART      1                     - (Optional) Scan and use the Serial interface for bootloading
- * USBDEVICESTRING      "PX4 BL FMU v2.x"     - USB id string
- * USBPRODUCTID         0x0011                - PID Should match defconfig
- * BOOT_DELAY_ADDRESS   0x000001a0            - (Optional) From the linker script from Linker Script to get a custom
- *                                               delay provided by an APP FW
 
-*  BOARD_TYPE           9                     - Must match .prototype boad_id
- * _FLASH_KBYTES        (*(uint16_t *)0x1fff7a22) - Run time flash size detection
- * BOARD_FLASH_SECTORS  ((_FLASH_KBYTES == 0x400) ? 11 : 23) - Run time determine the physical last sector
- * BOARD_FLASH_SECTORS   11                   - Hard coded zero based last sector
- * BOARD_FLASH_SIZE     (_FLASH_KBYTES*1024)-   Total Flash size of device, determined at run time.
- *                         (1024 * 1024)      - Hard coded Total Flash of device - The bootloader and app reserved will be deducted
- *                                              programmatically
- *
- * BOARD_FIRST_FLASH_SECTOR_TO_ERASE  2        - Optional sectors index in the flash_sectors table  (F4 only), to begin erasing.
- *                                               This is to allow sectors to be reserved for app fw usage. That will NOT be erased
- *                                               during a FW upgrade.
- *                                               The default is 0, and selects the first sector to be erased, as the 0th entry in the
- *                                               flash_sectors table. Which is the second physical sector of FLASH in the device.
- *                                               The first physical sector of FLASH is used by the bootloader, and is not defined
- *                                               in the table.
- *
- * APP_RESERVATION_SIZE (BOARD_FIRST_FLASH_SECTOR_TO_ERASE * 16 * 1024) - Number of bytes reserved by the APP FW. This number plus
- *                                                                        BOOTLOADER_RESERVATION_SIZE  will be deducted from
- *                                                                        BOARD_FLASH_SIZE to determine the size of the App FW
- *                                                                        and hence the address space of FLASH to erase and program.
- * USBMFGSTRING            "PX4 AP"            - Optional USB MFG string (default is '3D Robotics' if not defined.)
- *
- * * Other defines are somewhat self explanatory.
- */
 #if  defined(TARGET_HW_PX4_FMU_V1)
 
 # define APP_LOAD_ADDRESS               0x08004000
@@ -137,6 +100,60 @@
 # define BOARD_PIN_RX		     		GPIO6
 # define BOARD_USART_PIN_CLOCK_REGISTER RCC_AHB1ENR
 # define BOARD_USART_PIN_CLOCK_BIT  	RCC_AHB1ENR_IOPDEN
+
+/*
+ * Uncommenting this allows to force the bootloader through
+ * a PWM output pin. As this can accidentally initialize
+ * an ESC prematurely, it is not recommended. This feature
+ * has not been used and hence defaults now to off.
+ *
+ * # define BOARD_FORCE_BL_PIN_OUT         GPIO14
+ * # define BOARD_FORCE_BL_PIN_IN          GPIO11
+ * # define BOARD_FORCE_BL_PORT            GPIOE
+ * # define BOARD_FORCE_BL_CLOCK_REGISTER  RCC_AHB1ENR
+ * # define BOARD_FORCE_BL_CLOCK_BIT       RCC_AHB1ENR_IOPEEN
+ * # define BOARD_FORCE_BL_PULL            GPIO_PUPD_PULLUP
+ */
+
+/****************************************************************************
+ * TARGET_HW_NIU_FMU_V1
+ ****************************************************************************/
+
+#elif  defined(TARGET_HW_NIU_FMU_V1)
+
+# define APP_LOAD_ADDRESS               0x08008000
+# define BOOTLOADER_DELAY               5000
+//# define BOARD_FMUV2
+# define INTERFACE_USB                  0
+# define INTERFACE_USART                1
+# define USBDEVICESTRING                "NIU BL FMU v0.1"
+# define USBPRODUCTID                   0x0011
+# define BOOT_DELAY_ADDRESS             0x000001a0
+
+# define BOARD_TYPE                     9
+//# define _FLASH_KBYTES                  (*(uint16_t *)0x1ff0f442)
+# define BOARD_FLASH_SECTORS            8
+# define BOARD_FLASH_SIZE               (1024 * 1024)
+
+# define OSC_FREQ                       25
+
+# define BOARD_PIN_LED_ACTIVITY             GPIO14               // amber
+# define BOARD_PIN_LED_BOOTLOADER       GPIO15			// blue
+# define BOARD_PORT_LEDS                GPIOJ
+# define BOARD_CLOCK_LEDS               RCC_AHB1ENR_GPIOJEN
+# define BOARD_LED_ON                   gpio_clear
+# define BOARD_LED_OFF                  gpio_set
+
+# define BOARD_USART  					USART1
+# define BOARD_USART_CLOCK_REGISTER 	RCC_APB2ENR
+# define BOARD_USART_CLOCK_BIT      	RCC_APB2ENR_USART1EN
+
+# define BOARD_PORT_USART   			GPIOA
+# define BOARD_PORT_USART_AF 			GPIO_AF7
+# define BOARD_PIN_TX     				GPIO9
+# define BOARD_PIN_RX		     		GPIO10
+# define BOARD_USART_PIN_CLOCK_REGISTER RCC_AHB1ENR
+# define BOARD_USART_PIN_CLOCK_BIT  	RCC_AHB1ENR_GPIOAEN
 
 /*
  * Uncommenting this allows to force the bootloader through
@@ -441,70 +458,8 @@
 # define BOARD_TYPE                     0x14
 # define FLASH_SECTOR_SIZE              0x400
 
-/****************************************************************************
- * TARGET_HW_TAP_V1
- ****************************************************************************/
-
-#elif  defined(TARGET_HW_TAP_V1)
-
-# define APP_LOAD_ADDRESS               0x0800C000
-# define BOOTLOADER_DELAY               5000
-# define BOARD_TAP
-# define INTERFACE_USB                  1
-# define INTERFACE_USART                1
-# define USBDEVICESTRING                "PX4 BL TAP v1.x"
-# define USBPRODUCTID                   0x0040
-# define BOOT_DELAY_ADDRESS             0x000001a0
-
-# define BOARD_TYPE                     64
-# define BOARD_FLASH_SECTORS            11
-# define BOARD_FLASH_SIZE               (1024 * 1024)
-# define BOARD_FIRST_FLASH_SECTOR_TO_ERASE  2
-# define APP_RESERVATION_SIZE			(2 * 16 * 1024) /* 2 16 Kib Sectors */
-# define OSC_FREQ                       16
-
-# define BOARD_USART  					USART2
-# define BOARD_USART_CLOCK_REGISTER 	RCC_APB1ENR
-# define BOARD_USART_CLOCK_BIT      	RCC_APB1ENR_USART2EN
-
-# define BOARD_PORT_USART   			GPIOA
-# define BOARD_PORT_USART_AF 			GPIO_AF7
-# define BOARD_PIN_TX     				GPIO2
-# define BOARD_PIN_RX		     		GPIO3
-# define BOARD_USART_PIN_CLOCK_REGISTER RCC_AHB1ENR
-# define BOARD_USART_PIN_CLOCK_BIT  	RCC_AHB1ENR_IOPAEN
-
-# define BOARD_PIN_LED_ACTIVITY         GPIO4
-# define BOARD_PIN_LED_BOOTLOADER       GPIO5
-# define BOARD_PORT_LEDS                GPIOC
-# define BOARD_CLOCK_LEDS               RCC_AHB1ENR_IOPCEN
-# define BOARD_LED_ON                   gpio_clear
-# define BOARD_LED_OFF                  gpio_set
-
-# define BOARD_POWER_PIN_OUT            GPIO4
-# define BOARD_POWER_PORT               GPIOA
-# define BOARD_POWER_CLOCK_REGISTER     RCC_AHB1ENR
-# define BOARD_POWER_CLOCK_BIT          RCC_AHB1ENR_IOPAEN
-# define BOARD_POWER_ON                 gpio_set
-# define BOARD_POWER_OFF                gpio_clear
-# undef  BOARD_POWER_PIN_RELEASE		/* Leave pin enabling Power - un comment to release (disable power)*/
-# define USBMFGSTRING                   "The Autopilot"
-# define USB_FORCE_DISCONNECT			1
-
 #else
 # error Undefined Target Hardware
-#endif
-
-#if !defined(USBMFGSTRING)
-# define USBMFGSTRING "3D Robotics"
-#endif
-
-#if !defined(APP_RESERVATION_SIZE)
-#  define APP_RESERVATION_SIZE 0
-#endif
-
-#if !defined(BOARD_FIRST_FLASH_SECTOR_TO_ERASE)
-#  define BOARD_FIRST_FLASH_SECTOR_TO_ERASE 0
 #endif
 
 #endif /* HW_CONFIG_H_ */

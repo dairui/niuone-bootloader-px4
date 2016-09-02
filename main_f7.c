@@ -1,5 +1,5 @@
 /*
- * STM32F4 board support for the bootloader.
+ * STM32F7 board support for the bootloader.
  *
  */
 
@@ -23,43 +23,25 @@ static struct {
 	uint32_t	size;
 } flash_sectors[] = {
 	/* flash sector zero reserved for bootloader */
-	{0x01, 16 * 1024},
-	{0x02, 16 * 1024},
-	{0x03, 16 * 1024},
-	{0x04, 64 * 1024},
+	{0x01, 32 * 1024},
+	{0x02, 32 * 1024},
+	{0x03, 32 * 1024},
+	{0x04, 32 * 1024},
 	{0x05, 128 * 1024},
-	{0x06, 128 * 1024},
-	{0x07, 128 * 1024},
-	{0x08, 128 * 1024},
-	{0x09, 128 * 1024},
-	{0x0a, 128 * 1024},
-	{0x0b, 128 * 1024},
-	/* flash sectors only in 2MiB devices */
-	{0x10, 16 * 1024},
-	{0x11, 16 * 1024},
-	{0x12, 16 * 1024},
-	{0x13, 16 * 1024},
-	{0x14, 64 * 1024},
-	{0x15, 128 * 1024},
-	{0x16, 128 * 1024},
-	{0x17, 128 * 1024},
-	{0x18, 128 * 1024},
-	{0x19, 128 * 1024},
-	{0x1a, 128 * 1024},
-	{0x1b, 128 * 1024},
+	{0x06, 256 * 1024},
+	{0x07, 256 * 1024},
+	{0x08, 256 * 1024},
 };
-#define BOOTLOADER_RESERVATION_SIZE	(16 * 1024)
+#define BOOTLOADER_RESERVATION_SIZE	(32 * 1024)
 
-#define OTP_BASE			0x1fff7800
-#define OTP_SIZE			512
-#define UDID_START		        0x1FFF7A10
+#define OTP_BASE			0x1ff0f000
+#define OTP_SIZE			1024
+#define UDID_START		        0x1FF0F420
 
 // address of MCU IDCODE
 #define DBGMCU_IDCODE		0xE0042000
 #define STM32_UNKNOWN	0
-#define STM32F40x_41x	0x413
-#define STM32F42x_43x	0x419
-#define STM32F42x_446xx	0x421
+#define STM32F75x	0x449
 
 #define REVID_MASK	0xFFFF0000
 #define DEVID_MASK	0xFFF
@@ -67,11 +49,8 @@ static struct {
 /* magic numbers from reference manual */
 
 typedef enum mcu_rev_e {
-	MCU_REV_STM32F4_REV_A = 0x1000,
-	MCU_REV_STM32F4_REV_Z = 0x1001,
-	MCU_REV_STM32F4_REV_Y = 0x1003,
-	MCU_REV_STM32F4_REV_1 = 0x1007,
-	MCU_REV_STM32F4_REV_3 = 0x2001
+	MCU_REV_STM32F7_REV_A = 0x1000,
+	MCU_REV_STM32F7_REV_Z = 0x1001,
 } mcu_rev_e;
 
 typedef struct mcu_des_t {
@@ -82,12 +61,10 @@ typedef struct mcu_des_t {
 
 // The default CPU ID  of STM32_UNKNOWN is 0 and is in offset 0
 // Before a rev is known it is set to ?
-// There for new silicon will result in STM32F4..,?
+// There for new silicon will result in STM32F7..,?
 mcu_des_t mcu_descriptions[] = {
 	{ STM32_UNKNOWN,	"STM32F???",    '?'},
-	{ STM32F40x_41x, 	"STM32F40x",	'?'},
-	{ STM32F42x_43x, 	"STM32F42x",	'?'},
-	{ STM32F42x_446xx, 	"STM32F446XX",	'?'},
+	{ STM32F75x, 	"STM32F75x",	'?'},
 };
 
 typedef struct mcu_rev_t {
@@ -106,12 +83,9 @@ typedef struct mcu_rev_t {
  * 
  */
 const mcu_rev_t silicon_revs[] = {
-	{MCU_REV_STM32F4_REV_3, '3'}, /* Revision 3 */
-
-	{MCU_REV_STM32F4_REV_A, 'A'}, /* Revision A */  // FIRST_BAD_SILICON_OFFSET (place good ones above this line and update the FIRST_BAD_SILICON_OFFSET accordingly)
-	{MCU_REV_STM32F4_REV_Z, 'Z'}, /* Revision Z */
-	{MCU_REV_STM32F4_REV_Y, 'Y'}, /* Revision Y */
-	{MCU_REV_STM32F4_REV_1, '1'}, /* Revision 1 */
+	{MCU_REV_STM32F7_REV_Z, 'Z'}, /* Revision Z */
+		
+	{MCU_REV_STM32F7_REV_A, 'A'}, /* Revision A */  // FIRST_BAD_SILICON_OFFSET (place good ones above this line and update the FIRST_BAD_SILICON_OFFSET accordingly)
 };
 
 #define FIRST_BAD_SILICON_OFFSET 1
@@ -140,19 +114,20 @@ static void board_init(void);
 #define BOOT_RTC_SIGNATURE	0xb007b007
 #define BOOT_RTC_REG		MMIO32(RTC_BASE + 0x50)
 
-/* standard clocking for all F4 boards */
-static const clock_scale_t clock_setup = {
+/* standard clocking for all F7 boards */
+static const struct rcc_clock_scale clock_setup = {
 	.pllm = OSC_FREQ,
-	.plln = 336,
+	.plln = 432,
 	.pllp = 2,
-	.pllq = 7,
-	.hpre = RCC_CFGR_HPRE_DIV_NONE,
+	.pllq = 9,
+	.hpre = RCC_CFGR_HPRE_DIV_2,
 	.ppre1 = RCC_CFGR_PPRE_DIV_4,
 	.ppre2 = RCC_CFGR_PPRE_DIV_2,
 	.power_save = 0,
 	.flash_config = FLASH_ACR_ICE | FLASH_ACR_DCE | FLASH_ACR_LATENCY_5WS,
-	.apb1_frequency = 42000000,
-	.apb2_frequency = 84000000,
+	.ahb_frequency = 108000000,
+	.apb1_frequency = 27000000,
+	.apb2_frequency = 54000000,
 };
 
 static uint32_t
@@ -308,7 +283,7 @@ board_init(void)
 {
 	/* fix up the max firmware size, we have to read memory to get this */
 	board_info.fw_size = APP_SIZE_MAX;
-#if defined(TARGET_HW_PX4_FMU_V2) || defined(TARGET_HW_PX4_FMU_V4)
+#if 0
 
 	if (check_silicon() && board_info.fw_size == (2 * 1024 * 1024) - BOOTLOADER_RESERVATION_SIZE) {
 		board_info.fw_size = (1024 * 1024) - BOOTLOADER_RESERVATION_SIZE;
@@ -317,9 +292,9 @@ board_init(void)
 #endif
 
 #if INTERFACE_USB
-	/* enable GPIO9 with a pulldown to sniff VBUS */
-	rcc_peripheral_enable_clock(&RCC_AHB1ENR, RCC_AHB1ENR_IOPAEN);
-	gpio_mode_setup(GPIOA, GPIO_MODE_INPUT, GPIO_PUPD_PULLDOWN, GPIO9);
+	/* enable GPIO13 with a pulldown to sniff VBUS */
+	rcc_peripheral_enable_clock(&RCC_AHB1ENR, RCC_AHB1ENR_GPIOBEN);
+	gpio_mode_setup(GPIOB, GPIO_MODE_INPUT, GPIO_PUPD_PULLDOWN, GPIO13);
 #endif
 
 #if INTERFACE_USART
@@ -331,6 +306,10 @@ board_init(void)
 	/* Setup USART TX & RX pins as alternate function. */
 	gpio_set_af(BOARD_PORT_USART, BOARD_PORT_USART_AF, BOARD_PIN_TX);
 	gpio_set_af(BOARD_PORT_USART, BOARD_PORT_USART_AF, BOARD_PIN_RX);
+
+	/* configure USART clock source*/
+	//rcc_peripheral_enable_clock(&RCC_DCKCFGR2, 0x2);  // 0:pclk2 54MHz 1:sysclk 216MHz 2:HSI 16MHz 3:LSE
+	RCC_DCKCFGR2 &= (~0x3)|0x0;
 
 	/* configure USART clock */
 	rcc_peripheral_enable_clock(&BOARD_USART_CLOCK_REGISTER, BOARD_USART_CLOCK_BIT);
@@ -362,7 +341,7 @@ board_init(void)
 		GPIO_OTYPE_PP,
 		GPIO_OSPEED_2MHZ,
 		BOARD_PIN_LED_BOOTLOADER | BOARD_PIN_LED_ACTIVITY);
-	BOARD_LED_ON(
+	BOARD_LED_OFF(
 		BOARD_PORT_LEDS,
 		BOARD_PIN_LED_BOOTLOADER | BOARD_PIN_LED_ACTIVITY);
 
@@ -374,8 +353,8 @@ void
 board_deinit(void)
 {
 #if INTERFACE_USB
-	/* deinitialise GPIO9 (used to sniff VBUS) */
-	gpio_mode_setup(GPIOA, GPIO_MODE_INPUT, GPIO_PUPD_NONE, GPIO9);
+	/* deinitialise GPIO13 (used to sniff VBUS) */
+	gpio_mode_setup(GPIOB, GPIO_MODE_INPUT, GPIO_PUPD_NONE, GPIO13);
 #endif
 
 #if INTERFACE_USART
@@ -438,22 +417,22 @@ void
 clock_deinit(void)
 {
 	/* Enable internal high-speed oscillator. */
-	rcc_osc_on(HSI);
-	rcc_wait_for_osc_ready(HSI);
+	rcc_osc_on(RCC_HSI);
+	rcc_wait_for_osc_ready(RCC_HSI);
 
 	/* Reset the RCC_CFGR register */
 	RCC_CFGR = 0x000000;
 
 	/* Stop the HSE, CSS, PLL, PLLI2S, PLLSAI */
-	rcc_osc_off(HSE);
-	rcc_osc_off(PLL);
+	rcc_osc_off(RCC_HSE);
+	rcc_osc_off(RCC_PLL);
 	rcc_css_disable();
 
 	/* Reset the RCC_PLLCFGR register */
 	RCC_PLLCFGR = 0x24003010; // XXX Magic reset number from STM32F4xx reference manual
 
 	/* Reset the HSEBYP bit */
-	rcc_osc_bypass_disable(HSE);
+	rcc_osc_bypass_disable(RCC_HSE);
 
 	/* Reset the CIR register */
 	RCC_CIR = 0x000000;
@@ -577,7 +556,7 @@ int get_mcu_desc(int max, uint8_t *revstr)
 
 int check_silicon(void)
 {
-#if defined(TARGET_HW_PX4_FMU_V2) || defined(TARGET_HW_PX4_FMU_V4)
+#if 0
 	uint32_t idcode = (*(uint32_t *)DBGMCU_IDCODE);
 	mcu_rev_e revid = (idcode & REVID_MASK) >> 16;
 
@@ -661,6 +640,17 @@ main(void)
 	/* configure the clock for bootloader activity */
 	clock_init();
 
+
+if((rcc_ahb_frequency == 108000000)&&(rcc_apb1_frequency == 27000000)&&(rcc_apb1_frequency=54000000))
+	led_on(LED_BOOTLOADER);
+else
+	led_on(LED_ACTIVITY);
+	cinit(BOARD_INTERFACE_CONFIG_USART, USART);
+while(1)
+{
+	char buf[]="Bootloader running\n\r";
+	uart_cout(buf, 20);
+}
 	/*
 	 * Check the force-bootloader register; if we find the signature there, don't
 	 * try booting.
@@ -728,7 +718,7 @@ main(void)
 	 * If the force-bootloader pins are tied, we will stay here until they are removed and
 	 * we then time out.
 	 */
-	if (gpio_get(GPIOA, GPIO9) != 0) {
+	if (gpio_get(GPIOB, GPIO13) != 0) {
 
 		/* don't try booting before we set up the bootloader */
 		try_boot = false;
@@ -748,13 +738,19 @@ main(void)
 	 */
 	if (board_test_usart_receiving_break()) {
 		try_boot = false;
+led_on(LED_BOOTLOADER);
 	}
-
 #endif
 
+led_on(LED_ACTIVITY);
+cinit(BOARD_INTERFACE_CONFIG_USART, USART);
+while(1)
+{
+char data[]="Bootloader running";
+cout((uint8_t *)data, 19);
+}
 	/* Try to boot the app if we think we should just go straight there */
 	if (try_boot) {
-
 		/* set the boot-to-bootloader flag so that if boot fails on reset we will stop here */
 #ifdef BOARD_BOOT_FAIL_DETECT
 		board_set_rtc_signature(BOOT_RTC_SIGNATURE);
@@ -788,7 +784,6 @@ main(void)
 	gpio_mode_setup(GPIOC, GPIO_MODE_AF, GPIO_PUPD_NONE, GPIO9);
 	gpio_set_af(GPIOC, GPIO_AF0, GPIO9);
 #endif
-
 
 	while (1) {
 		/* run the bootloader, come back after an app is uploaded or we time out */

@@ -28,14 +28,15 @@ export FLAGS		 = -std=gnu99 \
 			   -nostartfiles \
 			   -lnosys \
 			   -Wl,-gc-sections \
-			   -Werror
+#			   -Werror
 
 export COMMON_SRCS	 = bl.c cdcacm.c  usart.c
 
 #
 # Bootloaders to build
 #
-TARGETS			 = px4fmu_bl px4fmuv2_bl px4fmuv4_bl mindpxv2_bl px4flow_bl px4discovery_bl px4aerocore_bl px4io_bl px4mavstation_bl tapv1_bl
+#TARGETS			 = px4fmu_bl px4fmuv2_bl px4fmuv4_bl mindpxv2_bl px4flow_bl px4discovery_bl px4aerocore_bl px4io_bl px4mavstation_bl
+TARGETS			 = niu_bl
 
 # px4io_bl px4flow_bl
 
@@ -43,7 +44,6 @@ all:	$(TARGETS)
 
 
 clean:
-	cd libopencm3 && make --no-print-directory clean & cd ..
 	rm -f *.elf *.bin
 
 #
@@ -81,9 +81,8 @@ px4io_bl: $(MAKEFILE_LIST) $(LIBOPENCM3)
 px4mavstation_bl: $(MAKEFILE_LIST) $(LIBOPENCM3)
 	make -f Makefile.f1 TARGET_HW=PX4_MAVSTATION_V1 LINKER_FILE=12K-stm32f1.ld TARGET_FILE_NAME=$@
 
-tapv1_bl: $(MAKEFILE_LIST) $(LIBOPENCM3)
-	make -f Makefile.f4 TARGET_HW=TAP_V1 LINKER_FILE=stm32f4.ld TARGET_FILE_NAME=$@
-
+niu_bl: $(MAKEFILE_LIST) $(LIBOPENCM3)
+	make -f Makefile.f7 TARGET_HW=NIU_FMU_V1  LINKER_FILE=stm32f7.ld TARGET_FILE_NAME=$@
 #
 # Binary management
 #
@@ -95,7 +94,7 @@ deploy:
 # Submodule management
 #
 
-$(LIBOPENCM3): checksubmodules
+$(LIBOPENCM3): # checksubmodules
 	make -C $(LIBOPENCM3) lib
 
 .PHONY: checksubmodules
